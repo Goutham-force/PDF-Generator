@@ -1,15 +1,5 @@
-/**
- * InvoiceController.cls
- * Handles Invoice creation, line item saving, and PDF generation.
- * Used by the invoiceGenerator LWC component.
- */
 public with sharing class InvoiceController {
 
-    // ─── Data Fetch ──────────────────────────────────────────────────────────
-
-    /**
-     * Returns a list of open Opportunities for the dropdown in Step 1.
-     */
     @AuraEnabled(cacheable=true)
     public static List<Opportunity> getOpportunities() {
         return [
@@ -21,9 +11,6 @@ public with sharing class InvoiceController {
         ];
     }
 
-    /**
-     * Returns a single Opportunity with its Account details.
-     */
     @AuraEnabled(cacheable=true)
     public static Opportunity getOpportunityById(Id opportunityId) {
         return [
@@ -36,12 +23,6 @@ public with sharing class InvoiceController {
         ];
     }
 
-    // ─── Save Transaction ────────────────────────────────────────────────────
-
-    /**
-     * Saves Invoice header + line items in a single DML transaction.
-     * Returns the new Invoice__c Id.
-     */
     @AuraEnabled
     public static Id saveInvoice(Invoice__c invoiceHeader, String lineItemsJson) {
     Savepoint sp = Database.setSavepoint();
@@ -70,13 +51,6 @@ public with sharing class InvoiceController {
         throw new AuraHandledException('Save failed: ' + e.getMessage());
     }
 }
-
-    // ─── PDF Generation ──────────────────────────────────────────────────────
-
-    /**
-     * Generates PDF content as a base64-encoded string using a Visualforce page.
-     * The VF page (InvoicePDF) renders the invoice data.
-     */
     @AuraEnabled
     public static String generateInvoicePDF(Id invoiceId) {
         try {
@@ -97,9 +71,6 @@ public with sharing class InvoiceController {
         }
     }
 
-    /**
-     * Saves the PDF as a ContentVersion (File) linked to the Invoice record.
-     */
     @AuraEnabled
     public static Id savePDFAsFile(Id invoiceId, String base64Data, String fileName) {
         try {
@@ -115,11 +86,6 @@ public with sharing class InvoiceController {
         }
     }
 
-    // ─── Invoice Retrieval (for PDF VF page) ────────────────────────────────
-
-    /**
-     * Returns a fully populated Invoice with line items.
-     */
     @AuraEnabled(cacheable=true)
     public static InvoiceWrapper getInvoiceDetails(Id invoiceId) {
         Invoice__c inv = [

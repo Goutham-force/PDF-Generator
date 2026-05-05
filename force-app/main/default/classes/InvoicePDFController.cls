@@ -1,8 +1,3 @@
-/**
- * InvoicePDFController.cls
- * Apex controller for the InvoicePDF Visualforce page.
- * Fetches invoice + line items based on the 'id' URL parameter.
- */
 public with sharing class InvoicePDFController {
 
     public Invoice__c              invoice   { get; private set; }

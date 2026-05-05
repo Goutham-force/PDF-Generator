@@ -1,4 +1,3 @@
-// invoiceGenerator.js
 import { LightningElement, track, wire, api } from 'lwc';
 import { NavigationMixin }                    from 'lightning/navigation';
 import { ShowToastEvent }                     from 'lightning/platformShowToastEvent';
@@ -21,7 +20,6 @@ import STAGE_FIELD       from '@salesforce/schema/Opportunity.StageName';
 
 const FIELDS = [OPPORTUNITY_NAME, ACCOUNT_ID, ACCOUNT_NAME, AMOUNT_FIELD, CLOSE_DATE_FIELD, STAGE_FIELD];
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 const today = () => new Date().toISOString().substring(0, 10);
 const addDays = (dateStr, n) => {
     const d = new Date(dateStr);
@@ -33,7 +31,6 @@ const newKey = () => `li_${++_keyCounter}`;
 
 export default class InvoiceGenerator extends NavigationMixin(LightningElement) {
 
-    // ── Quick Action context: Opportunity Id passed via recordId ──────────────
     @api recordId;
 
     // ── Wire: load the Opportunity record when launched from Quick Action ─────
@@ -42,7 +39,6 @@ export default class InvoiceGenerator extends NavigationMixin(LightningElement) 
         if (data) {
             this._prefillFromWire(data);
         }
-        // errors are non-critical here; user can still select manually
     }
 
     _prefillFromWire(data) {
@@ -60,14 +56,12 @@ export default class InvoiceGenerator extends NavigationMixin(LightningElement) 
         };
     }
 
-    // ── Step tracking ─────────────────────────────────────────────────────────
     @track currentStep = '1';
 
     get isStep1() { return this.currentStep === '1' && !this.isSaved; }
     get isStep2() { return this.currentStep === '2' && !this.isSaved; }
     get isStep3() { return this.currentStep === '3' && !this.isSaved; }
 
-    // ── Loading / error ───────────────────────────────────────────────────────
     @track isLoading  = false;
     @track errorMessage;
 
@@ -78,7 +72,6 @@ export default class InvoiceGenerator extends NavigationMixin(LightningElement) 
         this.isLoading    = false;
     }
 
-    // ── Step 1 state ──────────────────────────────────────────────────────────
     @track opportunityList     = [];
     @track selectedOpportunityId;
     @track selectedOpportunity;
@@ -164,13 +157,11 @@ export default class InvoiceGenerator extends NavigationMixin(LightningElement) 
         return true;
     }
 
-    // ── Step 2 state ──────────────────────────────────────────────────────────
     @track lineItems  = [];
     @track invoiceNotes = '';
 
     get hasLineItems() { return this.lineItems.length > 0; }
 
-    /** Computed total using a getter — recalculates on every render */
     get invoiceTotal() {
         return this.lineItems.reduce((sum, item) => sum + (item.totalPrice || 0), 0);
     }
@@ -244,7 +235,6 @@ export default class InvoiceGenerator extends NavigationMixin(LightningElement) 
         return true;
     }
 
-    // ── Step 3 / Save ─────────────────────────────────────────────────────────
     @track isSaved         = false;
     @track savedInvoiceId;
     @track savedInvoiceName;
@@ -255,7 +245,6 @@ export default class InvoiceGenerator extends NavigationMixin(LightningElement) 
         this.errorMessage = null;
 
         try {
-            // Build Apex-compatible objects
            const invoiceHeader = {
     Invoice_Date__c : this.invoiceDate,
     Due_Date__c     : this.dueDate,
@@ -274,7 +263,6 @@ export default class InvoiceGenerator extends NavigationMixin(LightningElement) 
                 Total_Price__c : item.totalPrice
             }));
 
-            // 1) Save records
            const lineItemsJson = JSON.stringify(this.lineItems.map(item => ({
     description : item.description,
     quantity    : parseFloat(item.quantity),
@@ -287,10 +275,8 @@ const invoiceId = await saveInvoice({
     lineItemsJson 
 })
 
-            // 2) Generate PDF
             this.pdfBase64 = await generateInvoicePDF({ invoiceId });
 
-            // 3) Attach PDF to record
             const invoiceName = `Invoice_${this.savedInvoiceName || invoiceId}`;
             await savePDFAsFile({
                 invoiceId,
@@ -298,8 +284,7 @@ const invoiceId = await saveInvoice({
                 fileName   : invoiceName
             });
 
-            // 4) Fetch name for display
-            this.savedInvoiceName = invoiceId;   // replaced after navigation resolves
+            this.savedInvoiceName = invoiceId;   
             this.isSaved          = true;
 
             this.dispatchEvent(new ShowToastEvent({
@@ -315,7 +300,6 @@ const invoiceId = await saveInvoice({
         }
     }
 
-    // ── PDF Download ──────────────────────────────────────────────────────────
     downloadPDF() {
         if (!this.pdfBase64) {
             this._setError('PDF data is not available.');
@@ -341,7 +325,6 @@ const invoiceId = await saveInvoice({
         }
     }
 
-    // ── Navigate to Invoice record ────────────────────────────────────────────
     navigateToInvoice() {
         this[NavigationMixin.Navigate]({
             type       : 'standard__recordPage',
