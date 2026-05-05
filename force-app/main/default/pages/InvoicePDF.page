@@ -1,0 +1,221 @@
+<!-- InvoicePDF.page -->
+<!-- Visualforce page rendered as PDF via InvoiceController.generateInvoicePDF() -->
+<apex:page
+    controller="InvoicePDFController"
+    renderAs="pdf"
+    applyBodyTag="false"
+    applyHtmlTag="false"
+    showHeader="false"
+    sidebar="false"
+    standardStylesheets="false">
+
+<html>
+<head>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12px;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        .header {
+            border-bottom: 3px solid #0176d3;
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+            display: table;
+            width: 100%;
+        }
+        .header-left  { display: table-cell; width: 60%; vertical-align: top; }
+        .header-right { display: table-cell; width: 40%; text-align: right; vertical-align: top; }
+        h1 { color: #0176d3; font-size: 28px; margin: 0 0 4px 0; }
+        .invoice-meta { color: #666; font-size: 11px; }
+        .section-title {
+            font-weight: bold;
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        .bill-to { margin-bottom: 24px; }
+        table.line-items {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 16px;
+        }
+        table.line-items th {
+            background-color: #0176d3;
+            color: #fff;
+            padding: 8px 10px;
+            text-align: left;
+            font-size: 11px;
+        }
+        table.line-items th.right,
+        table.line-items td.right { text-align: right; }
+        table.line-items td {
+            padding: 7px 10px;
+            border-bottom: 1px solid #e8e8e8;
+            font-size: 11px;
+        }
+        table.line-items tr.alt td { background-color: #f8f8f8; }
+        .totals {
+            float: right;
+            width: 220px;
+            margin-top: 8px;
+        }
+        .totals table { width: 100%; border-collapse: collapse; }
+        .totals td { padding: 5px 8px; font-size: 12px; }
+        .totals .grand-total td {
+            background-color: #0176d3;
+            color: #fff;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .notes {
+            margin-top: 60px;
+            border-top: 1px solid #e8e8e8;
+            padding-top: 12px;
+            clear: both;
+        }
+        .footer {
+            margin-top: 40px;
+            border-top: 1px solid #e0e0e0;
+            padding-top: 8px;
+            font-size: 10px;
+            color: #999;
+            text-align: center;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            background-color: #fce4b3;
+            color: #a56000;
+        }
+        .status-sent    { background-color: #d4edda; color: #155724; }
+        .status-paid    { background-color: #cce5ff; color: #004085; }
+    </style>
+</head>
+<body>
+
+    <!-- ── Header ── -->
+    <div class="header">
+        <div class="header-left">
+            <h1>INVOICE</h1>
+            <div class="invoice-meta">
+                <strong>Invoice #:</strong> {!invoice.Name}<br/>
+                <strong>Invoice Date:</strong>
+                    <apex:outputText value="{0,date,MMMM d, yyyy}">
+                        <apex:param value="{!invoice.Invoice_Date__c}"/>
+                    </apex:outputText><br/>
+                <strong>Due Date:</strong>
+                    <apex:outputText value="{0,date,MMMM d, yyyy}">
+                        <apex:param value="{!invoice.Due_Date__c}"/>
+                    </apex:outputText>
+            </div>
+        </div>
+        <div class="header-right">
+            <span class="status-badge
+                {!IF(invoice.Status__c == 'Sent',   'status-sent',   '')}
+                {!IF(invoice.Status__c == 'Paid',   'status-paid',   '')}
+            ">
+                {!invoice.Status__c}
+            </span>
+            <br/><br/>
+            <strong>Opportunity:</strong><br/>
+            {!invoice.Opportunity__r.Name}
+        </div>
+    </div>
+
+    <!-- ── Bill To ── -->
+    <div class="bill-to">
+        <div class="section-title">Bill To</div>
+        <strong>{!invoice.Account__r.Name}</strong><br/>
+        <apex:outputText rendered="{!NOT(ISBLANK(invoice.Account__r.BillingStreet))}">
+            {!invoice.Account__r.BillingStreet}<br/>
+        </apex:outputText>
+        <apex:outputText rendered="{!NOT(ISBLANK(invoice.Account__r.BillingCity))}">
+            {!invoice.Account__r.BillingCity},&#160;
+        </apex:outputText>
+        <apex:outputText rendered="{!NOT(ISBLANK(invoice.Account__r.BillingState))}">
+            {!invoice.Account__r.BillingState}&#160;
+        </apex:outputText>
+        <apex:outputText rendered="{!NOT(ISBLANK(invoice.Account__r.BillingPostalCode))}">
+            {!invoice.Account__r.BillingPostalCode}<br/>
+        </apex:outputText>
+        <apex:outputText rendered="{!NOT(ISBLANK(invoice.Account__r.BillingCountry))}">
+            {!invoice.Account__r.BillingCountry}
+        </apex:outputText>
+    </div>
+
+    <!-- ── Line Items ── -->
+    <table class="line-items">
+        <thead>
+            <tr>
+                <th style="width:5%">#</th>
+                <th style="width:45%">Description</th>
+                <th style="width:15%" class="right">Qty</th>
+                <th style="width:17%" class="right">Unit Price</th>
+                <th style="width:18%" class="right">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            <apex:repeat value="{!lineItems}" var="item" id="lineItemRows">
+                <tr class="{!IF(MOD(rowIndex, 2) = 1, 'alt', '')}">
+                    <td>{!rowIndex + 1}</td>
+                    <td>{!item.Description__c}</td>
+                    <td class="right">{!item.Quantity__c}</td>
+                    <td class="right">
+                        <apex:outputText value="{0,number,$#,##0.00}">
+                            <apex:param value="{!item.Unit_Price__c}"/>
+                        </apex:outputText>
+                    </td>
+                    <td class="right">
+                        <apex:outputText value="{0,number,$#,##0.00}">
+                            <apex:param value="{!item.Total_Price__c}"/>
+                        </apex:outputText>
+                    </td>
+                </tr>
+            </apex:repeat>
+        </tbody>
+    </table>
+
+    <!-- ── Totals ── -->
+    <div class="totals">
+        <table>
+            <tr class="grand-total">
+                <td><strong>TOTAL DUE</strong></td>
+                <td style="text-align:right">
+                    <strong>
+                        <apex:outputText value="{0,number,$#,##0.00}">
+                            <apex:param value="{!invoice.Total_Amount__c}"/>
+                        </apex:outputText>
+                    </strong>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- ── Notes ── -->
+    <apex:outputPanel rendered="{!NOT(ISBLANK(invoice.Notes__c))}" layout="block">
+        <div class="notes">
+            <div class="section-title">Notes</div>
+            {!invoice.Notes__c}
+        </div>
+    </apex:outputPanel>
+
+    <!-- ── Footer ── -->
+    <div class="footer">
+        Thank you for your business · Generated on
+        <apex:outputText value="{0,date,MMMM d, yyyy}">
+            <apex:param value="{!TODAY()}"/>
+        </apex:outputText>
+    </div>
+
+</body>
+</html>
+</apex:page>
