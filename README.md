@@ -9,13 +9,10 @@
 - Quick Action on Opportunity
 
 ## Setup Steps
-1. Create Scratch Org:
-   sfdx force:org:create -s -f config/project-scratch-def.json -a PDFApp
-
-2. Push Source:
+1. Push Source:
    sfdx force:source:push
 
-3. Open Org:
+2. Open Org:
    sfdx force:org:open
 
 ## Test Data
