@@ -1,18 +1,34 @@
-# Salesforce DX Project: Next Steps
+# PDF Generator - Salesforce LWC Project
 
-Now that you’ve created a Salesforce DX project, what’s next? Here are some documentation resources to get you started.
+## Features
+- Multi-step form (Opportunity selection + Line Items)
+- Add multiple line items dynamically
+- Automatic total calculation
+- Save Invoice and Line Items using Apex
+- PDF generation and download
+- Quick Action on Opportunity
 
-## How Do You Plan to Deploy Your Changes?
+## Setup Steps
+1. Create Scratch Org:
+   sfdx force:org:create -s -f config/project-scratch-def.json -a PDFApp
 
-Do you want to deploy a set of changes, or create a self-contained application? Choose a [development model](https://developer.salesforce.com/tools/vscode/en/user-guide/development-models).
+2. Push Source:
+   sfdx force:source:push
 
-## Configure Your Salesforce DX Project
+3. Open Org:
+   sfdx force:org:open
 
-The `sfdx-project.json` file contains useful configuration information for your project. See [Salesforce DX Project Configuration](https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_ws_config.htm) in the _Salesforce DX Developer Guide_ for details about this file.
+## Test Data
+- Create an Opportunity record
+- Use "Create Invoice" Quick Action
 
-## Read All About It
+## How to Run
+1. Open an Opportunity
+2. Click "Create Invoice"
+3. Add line items
+4. Click Save
+5. PDF will be generated and downloaded
 
-- [Salesforce Extensions Documentation](https://developer.salesforce.com/tools/vscode/)
-- [Salesforce CLI Setup Guide](https://developer.salesforce.com/docs/atlas.en-us.sfdx_setup.meta/sfdx_setup/sfdx_setup_intro.htm)
-- [Salesforce DX Developer Guide](https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_intro.htm)
-- [Salesforce CLI Command Reference](https://developer.salesforce.com/docs/atlas.en-us.sfdx_cli_reference.meta/sfdx_cli_reference/cli_reference.htm)
+## Notes
+- Built using LWC + Apex
+- Uses Visualforce for PDF generation
